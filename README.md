@@ -1,43 +1,92 @@
-# Flow — ตรวจจับรถและประเมินเวลาไฟเขียว
+# Traffic Flow
 
-เว็บภาษาอังกฤษ ใช้โมเดล `C:\ai\yolo_11\best-4.pt` ผ่าน Ultralytics YOLO โดยตรง รองรับภาพ วิดีโอ และกล้องของเบราว์เซอร์ ภาพไม่ถูกบันทึกบนเซิร์ฟเวอร์
+A local web application that counts vehicles with a custom YOLO11 model and estimates the green-light duration for a single traffic approach.
 
-## เริ่มใช้งานบน Windows
+## Features
 
-1. ใช้ Python ที่มากับ Codex บนเครื่องนี้ได้ หรือใช้ Python 3.11/3.12 พร้อม Python Launcher ต้องมีอินเทอร์เน็ตสำหรับติดตั้งไลบรารีครั้งแรก (รวม PyTorch ซึ่งมีขนาดใหญ่)
-2. ดับเบิลคลิก `start.bat` ในโฟลเดอร์นี้ รอการติดตั้งจนแสดงว่าเซิร์ฟเวอร์ทำงาน
-3. เปิด http://127.0.0.1:8050 รอให้ขึ้น “Model ready”
-4. เลือกคลาสที่เป็นรถ อัปโหลดภาพ/วิดีโอ หรือเปิดกล้อง แล้วดูกรอบตรวจจับ จำนวนรถ และเวลาไฟเขียว
-5. กดหยุดเพื่อหยุดวิดีโอ/กล้อง ปิดหน้าต่างเซิร์ฟเวอร์เมื่อต้องการเลิกใช้งาน
+- English interface with image uploads, video playback, and live camera input.
+- Vehicle detection with bounding boxes and counts for the latest analyzed frame.
+- Configurable confidence threshold and vehicle classes.
+- Adjustable discharge time, minimum and maximum green time, and number of lanes.
+- Local processing without saving uploaded images.
 
-หากมี Python environment พร้อมอยู่แล้ว ใช้ `python -m pip install -r requirements.txt` แล้ว `python app.py`
+## Requirements
 
-เครื่องนี้ติดตั้งไลบรารีครบแล้วใน `.packages` และทดสอบโมเดลจริงผ่านแล้ว เปิด `start.bat` ได้โดยไม่ต้องดาวน์โหลดใหม่ ชุดเวอร์ชันที่ทดสอบบันทึกใน `requirements-lock.txt` (PyTorch แบบ CPU)
+- Windows with Python 3.11 or 3.12 and Python Launcher, or the bundled Codex Python runtime used by the launcher.
+- Internet access for the first dependency installation.
+- Your custom `best-4.pt` detection model. Model weights and training data are not included in this repository.
 
-ตัวเปิดใช้งานติดตั้งไลบรารีแยกไว้ใน `.packages` ภายในโฟลเดอร์แอป หากต้องติดตั้งใหม่ ให้ลบไฟล์ `.packages/setup.ok` ก่อนเปิดอีกครั้ง
+## Quick start on Windows
 
-เปลี่ยนตำแหน่งโมเดลได้ด้วย environment variable `YOLO_MODEL_PATH` ก่อนรันแอป ไม่จำเป็นต้องย้ายโมเดลเข้ามาในโปรเจกต์
+1. Clone or download this repository.
+2. Place your model at `C:\ai\yolo_11\best-4.pt`, or set `YOLO_MODEL_PATH` to its full path before starting the app.
+3. Double-click `start.bat`. The first run installs the tested CPU dependencies into `.packages`; later runs reuse them.
+4. Open **http://127.0.0.1:8050**.
+5. Select the vehicle classes, upload an image or video, or open your camera. Review the detected count and recommended green time.
 
-## การนับและคำนวณ
+Use **Stop** to stop video or camera analysis. Close the server window to shut down the application.
 
-นับเฉพาะกรอบวัตถุจากคลาสที่เลือกและผ่าน confidence threshold ของโมเดล ไม่กำหนด class ID ตาม COCO เพราะโมเดลนี้เป็น custom model ระบบแสดงชื่อคลาสจากไฟล์โมเดลจริง
+### Run in an existing Python environment
 
-`ไฟเขียว = จำกัดค่า(ปัดขึ้น(จำนวนรถ × วินาทีต่อคัน ÷ ช่องจราจร), ขั้นต่ำ, สูงสุด)`
+```sh
+python -m pip install -r requirements-lock.txt
+python app.py
+```
 
-ถ้าไม่พบรถ ให้ค่า 0 วินาที ค่าเริ่มต้นคือ 2 วินาทีต่อคัน ขั้นต่ำ 10 สูงสุด 90 และ 1 ช่องจราจร ตัวอย่าง 12 คัน = 24 วินาที และ 3 คัน = 10 วินาที
+`requirements-lock.txt` records the tested dependency versions, including CPU builds of PyTorch and torchvision. `requirements.txt` provides broader dependency ranges.
 
-วิดีโอ/กล้องส่งภาพทีละเฟรมหลังการตรวจจับก่อนหน้าเสร็จ จำนวนเป็นรถที่เห็นในเฟรมนั้น ไม่ใช่จำนวนรถสะสมหรือจำนวนรถที่ผ่านเส้น ไม่มีระบบ tracking เพื่อหายอดรถไม่ซ้ำ และยังไม่กำหนดพื้นที่คิวรถ (ROI) จึงควรเลือกภาพที่เห็นเฉพาะทิศทางที่ต้องการประเมิน
+To change the model path in PowerShell:
 
-การแสดงไฟเขียวเป็นค่าประเมิน ไม่ใช่ตัวนับถอยหลังหรือการสั่งงานอุปกรณ์จริง ยังไม่มีการจัดเฟสหลายทิศทาง เวลาไฟเหลือง เวลากวาดทางแยก หรือคนข้ามถนน
+```powershell
+$env:YOLO_MODEL_PATH = "C:\path\to\best-4.pt"
+python app.py
+```
 
-## โครงสร้าง
+The default port is 8050. Set the `PORT` environment variable to use a different port. See [MODEL_SETUP.md](MODEL_SETUP.md) for additional model details.
 
-- `app.py` เว็บเซิร์ฟเวอร์และการเรียกโมเดล
-- `static/index.html` หน้าจอภาษาไทย
-- `static/app.js` รับภาพ/กล้องและแสดงผล
-- `requirements.txt` ไลบรารีที่ต้องติดตั้ง
-- `start.bat` ตัวช่วยเปิดใช้งาน
+## Green-time calculation
 
-เซิร์ฟเวอร์รับเฉพาะการเชื่อมต่อบนเครื่องนี้ ภาพไม่เกิน 12 MB และ 20 ล้านพิกเซล จะถูกย่อก่อนวิเคราะห์ ต้องอนุญาตกล้องในเบราว์เซอร์ วิดีโอต้องเป็นรูปแบบที่เบราว์เซอร์เล่นได้
+```text
+raw time = ceil(vehicle count × seconds per vehicle ÷ simultaneous lanes)
+green time = min(maximum green, max(minimum green, raw time))
+```
 
-อ้างอิง API โมเดล: https://docs.ultralytics.com/modes/predict/
+When no vehicles are detected, the recommendation is **0 seconds**.
+
+Defaults: **2 seconds per vehicle**, **10-second minimum**, **90-second maximum**, and **1 lane**. For example, 12 vehicles produce 24 seconds; 3 vehicles produce the 10-second minimum.
+
+## Counting behavior and limitations
+
+Counts represent vehicles visible in the latest analyzed frame. They are not cumulative traffic totals or unique vehicle counts. Video and camera frames are processed sequentially after the previous detection finishes.
+
+The application reads class labels from the model instead of assuming COCO class IDs. The supplied model has a single class named `class_0`, which is selected automatically. For models with multiple classes, select the classes that represent vehicles.
+
+There is no queue region of interest or tracking across frames. Use footage focused on the approach you want to analyze. Green time is an estimate, not a countdown or a command to physical traffic signal equipment. Pedestrian phases, yellow time, intersection clearance, and coordination between approaches are not implemented.
+
+The server listens only on the local machine. Images are limited to 12 MB and 20 million pixels and are resized before inference. Camera use requires browser permission; video formats must be supported by the browser.
+
+## Project structure
+
+| File | Purpose |
+| --- | --- |
+| `app.py` | Flask server, model inference, and timing calculation |
+| `static/index.html` | English interface |
+| `static/app.js` | Image, video, camera, and result handling |
+| `start.bat` | Windows launcher and dependency setup |
+| `requirements-lock.txt` | Tested dependency versions |
+| `requirements.txt` | General dependency requirements |
+| `test_app.py` | API validation tests using mock detection results |
+| `MODEL_SETUP.md` | Model configuration instructions |
+| `VALIDATION.md` | Validation notes and real-model test results |
+
+## Validation
+
+```sh
+python -m unittest test_app.py
+```
+
+Six API tests cover the page, missing models, invalid settings, invalid files, class selection, and result handling. These use mock inference results.
+
+A separate test with the actual `best-4.pt` model detected **15 vehicles**, producing a **30-second** green-time recommendation. A blank image returned **0 vehicles** and **0 seconds**. Live video and camera operation have not yet been tested end to end.
+
+Model API reference: [Ultralytics prediction documentation](https://docs.ultralytics.com/modes/predict/).
