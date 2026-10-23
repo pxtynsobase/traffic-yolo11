@@ -1,0 +1,11 @@
+{
+  "name": "Traffic Flow",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "vscode",
+  "hostRequirements": { "cpus": 2, "memory": "4gb", "storage": "16gb" },
+  "forwardPorts": [8050],
+  "portsAttributes": { "8050": { "label": "Traffic Flow", "onAutoForward": "openBrowser" } },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": ".venv/bin/python .devcontainer/start.py",
+  "waitFor": "postCreateCommand"
+}

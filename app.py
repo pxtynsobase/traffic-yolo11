@@ -19,7 +19,8 @@ from PIL import Image, UnidentifiedImageError
 
 app = Flask(__name__, static_folder='static')
 app.config['MAX_CONTENT_LENGTH'] = 12 * 1024 * 1024
-MODEL_PATH = Path(os.environ.get('YOLO_MODEL_PATH', r'C:\ai\yolo_11\best-4.pt'))
+DEFAULT_MODEL = r'C:\ai\yolo_11\best-4.pt' if os.name == 'nt' else str(Path(__file__).resolve().parent / 'models' / 'best-4.pt')
+MODEL_PATH = Path(os.environ.get('YOLO_MODEL_PATH', DEFAULT_MODEL))
 model = None
 lock = threading.Lock()
 
@@ -59,6 +60,11 @@ def status():
             return jsonify(ready=True, model=MODEL_PATH.name, classes=m.names)
     except Exception as exc:
         return jsonify(ready=False, error=str(exc)), 503
+
+
+@app.get('/api/health')
+def health():
+    return jsonify(service='traffic-flow', healthy=True, model_present=MODEL_PATH.is_file())
 
 
 @app.post('/api/detect')
@@ -108,4 +114,4 @@ def too_large(_):
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=int(os.environ.get('PORT', '8050')), debug=False)
+    app.run(host=os.environ.get('HOST', '127.0.0.1'), port=int(os.environ.get('PORT', '8050')), debug=False)

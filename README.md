@@ -1,5 +1,7 @@
 # Traffic Flow
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/pxtynsobase/traffic-yolo11)
+
 A local web application that counts vehicles with a custom YOLO11 model and estimates the green-light duration for a single traffic approach.
 
 ## Features
@@ -11,6 +13,8 @@ A local web application that counts vehicles with a custom YOLO11 model and esti
 - Local processing without saving uploaded images.
 
 ## Requirements
+
+For a cloud demonstration, follow [Run in GitHub Codespaces](CODESPACES.md). Setup and server startup are automatic; upload your own model into the Codespace's `models/` folder.
 
 - Windows with Python 3.11 or 3.12 and Python Launcher, or the bundled Codex Python runtime used by the launcher.
 - Internet access for the first dependency installation.
@@ -63,7 +67,7 @@ The application reads class labels from the model instead of assuming COCO class
 
 There is no queue region of interest or tracking across frames. Use footage focused on the approach you want to analyze. Green time is an estimate, not a countdown or a command to physical traffic signal equipment. Pedestrian phases, yellow time, intersection clearance, and coordination between approaches are not implemented.
 
-The server listens only on the local machine. Images are limited to 12 MB and 20 million pixels and are resized before inference. Camera use requires browser permission; video formats must be supported by the browser.
+The Windows launcher listens only on the local machine. Codespaces uses a forwarded port with a private link by default. Images are limited to 12 MB and 20 million pixels and are resized before inference. Camera use requires browser permission; video formats must be supported by the browser.
 
 ## Project structure
 
@@ -85,7 +89,7 @@ The server listens only on the local machine. Images are limited to 12 MB and 20
 python -m unittest test_app.py
 ```
 
-Six API tests cover the page, missing models, invalid settings, invalid files, class selection, and result handling. These use mock inference results.
+API tests cover the page, missing models, health checks, invalid settings, invalid files, class selection, and result handling. These use mock inference results.
 
 A separate test with the actual `best-4.pt` model detected **15 vehicles**, producing a **30-second** green-time recommendation. A blank image returned **0 vehicles** and **0 seconds**. Live video and camera operation have not yet been tested end to end.
 

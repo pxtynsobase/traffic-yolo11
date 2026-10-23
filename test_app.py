@@ -22,6 +22,14 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(response.status_code, 503)
             self.assertFalse(response.json['ready'])
 
+    def test_health_does_not_load_model(self):
+        with patch.object(app, 'get_model') as loader:
+            response = self.client.get('/api/health')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['service'], 'traffic-flow')
+        self.assertTrue(response.json['healthy'])
+        loader.assert_not_called()
+
     def test_invalid_settings_rejected(self):
         response = self.client.post('/api/detect', data={'minimum': '90', 'maximum': '10'})
         self.assertEqual(response.status_code, 400)
