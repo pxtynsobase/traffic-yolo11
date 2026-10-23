@@ -1,0 +1,23 @@
+# Local dependencies and runtime state
+.packages/
+.runtime/
+.runtime-tmp/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Model weights and local media are supplied separately
+*.pt
+*.onnx
+uploads/
+runs/
+
+# Credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
